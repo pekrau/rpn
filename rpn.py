@@ -243,6 +243,19 @@ class Repeat(Item):
         return next(self.executor)
 
 
+class Neg(Item):
+    RX = re.compile(r"-")
+
+    def __str__(self):
+        return "neg"
+
+    def __repr__(self):
+        return "neg"
+
+    def __call__(self, executor):
+        executor.execute(iter([Identifier("neg")]))
+
+
 class Add(Item):
     RX = re.compile(r"\+")
 
@@ -842,7 +855,7 @@ class Executor:
             self.push(Float(abs(item.value)))
 
     def op_neg(self):
-        """Negate the number.
+        """Negate the number. Also available as '-'.
         value => value
         """
         item = self.pop(Number)

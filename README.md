@@ -80,7 +80,7 @@ options:
 | **round** | Convert the value to the nearest integer. | value &rarr; integer |
 | **float** | Convert the value to a float. | value &rarr; float |
 | **abs** | Absolute value of the number. | value &rarr; value |
-| **neg** | Negate the number. | value &rarr; value |
+| **neg** | Negate the number. Also available as '-'. | value &rarr; value |
 
 ### Math
 
@@ -100,8 +100,8 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **error** | Raise an error. | No change. |
 | **length** | Return length of the item (String, Array). | item &rarr; length |
+| **error** | Raise an error. | No change. |
 
 ### Interactive
 
@@ -109,9 +109,9 @@ The following one-character operators are available only in interactive mode.
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| = | Print the stack | No change. |
-| § | Print the keyspaces | No change. |
-| ? | Print the operators | No change. |
+| = | Print the stack. | No change. |
+| § | Print the keyspaces. | No change. |
+| ? | Print the operators. | No change. |
 
 ## Predefined variables
 
