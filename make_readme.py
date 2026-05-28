@@ -27,7 +27,7 @@ def print_markdown():
                        ("Control", ["if", "ifelse", "repeat", "for"]),
                        ("Logic", ["bool", "not", "and", "or", "xor", "gt",
                                   "ge", "lt", "le", "eq", "ne"]),
-                       ("Numbers", ["integer", "round", "float", "neg"]),
+                       ("Numbers", ["integer", "round", "float", "abs", "neg"]),
                        ("Math", ["add", "sub", "mul", "div", "log", "log10",
                                  "exp", "power", "sqrt"]),
                        ]:

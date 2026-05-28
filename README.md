@@ -79,6 +79,7 @@ options:
 | **integer** | Convert the value to an integer. | value &rarr; integer |
 | **round** | Convert the value to the nearest integer. | value &rarr; integer |
 | **float** | Convert the value to a float. | value &rarr; float |
+| **abs** | Absolute value of the number. | value &rarr; value |
 | **neg** | Negate the number. | value &rarr; value |
 
 ### Math
@@ -99,7 +100,6 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **abs** | Absolute value of the number. | value &rarr; value |
 | **error** | Raise an error. | No change. |
 | **length** | Return length of the item (String, Array). | item &rarr; length |
 
