@@ -1,0 +1,7 @@
+/eq_check {eq {"OK" print} {error} ifelse} def
+
+/double {2 mul} def
+
+3 double 6 eq_check
+-2 double -4 eq_check
+
