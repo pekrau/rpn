@@ -32,9 +32,9 @@ options:
 | :--- | :--- | :--- |
 | **def** | Create a variable; a keyed item (value, array, procedure). | key item &rarr; - |
 | **run** | Open a new input file, read items from it and execute. | filename &rarr; - |
-| **count** | Count the number of elements in the stack, and put that number on the stack. | ... &rarr; ... number |
+| **count** | Count the number of elements in the stack, and put that number on the stack. | &rarr; number |
 | **dump** | Write out the current stack and keyspaces to the named file. | filename &rarr; - |
-| **quit** | Quit from execution without saving to any session file. | - |
+| **quit** | Quit from execution without saving to any session file. | N/A |
 
 ### Stack
 
@@ -45,7 +45,7 @@ options:
 | **dup** | Duplicate the top item. Just the reference, not a full copy. | item &rarr; item item |
 | **copy** | Make a full copy of the item and put on the stack. | item &rarr; item copy |
 | **exch** | Exchange the two top items on the stack. | item1 item2 &rarr; item2 item1 |
-| **clear** | Clear all items from the stack. | ... &rarr; <empty> |
+| **clear** | Clear all items from the stack. | ... &rarr; &lt;empty&gt; |
 
 ### Control
 
@@ -69,7 +69,7 @@ options:
 | **ge** | Greater than or equal to. The values must of comparable types. | value1 value2 &rarr; bool |
 | **lt** | Less than. The values must of comparable types. | value1 value2 &rarr; bool |
 | **le** | Less than or equal to. The values must of comparable types. | value1 value2 &rarr; bool |
-| **eq** | Equal to. | value1 value2 &rarr; bool:B |
+| **eq** | Equal to. | value1 value2 &rarr; bool |
 | **ne** | Not equal to. | value1 value2 &rarr; bool |
 
 ### Numbers
@@ -85,7 +85,7 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **add** | Add the two numbers on the stack. | value1 value2:N &rarr; value |
+| **add** | Add the two numbers on the stack. | value1 value2 &rarr; value |
 | **sub** | Subtract the top number on the stack from the next-to-top number. | value1 value2 &rarr; value |
 | **mul** | Multiply the two numbers on the stack. | value1 value2 &rarr; value |
 | **div** | Divide the next-to-top number on the stack by the top number. | value1 value2 &rarr; value |
@@ -99,9 +99,9 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **abs** | Absolute value of the number. | value &rarr; value |
-| **error** | Raise an error. | - |
 | **length** | Return length of the item (String, Array). | item &rarr; length |
+| **abs** | Absolute value of the number. | value &rarr; value |
+| **error** | Raise an error. | No change. |
 
 ### Interactive
 
@@ -109,9 +109,9 @@ The following one-character operators are available only in interactive mode.
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| = | Print the stack | - |
-| § | Print the keyspaces | - |
-| ? | Print the operators | - |
+| = | Print the stack | No change. |
+| § | Print the keyspaces | No change. |
+| ? | Print the operators | No change. |
 
 ## Predefined variables
 

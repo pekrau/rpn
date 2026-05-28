@@ -44,9 +44,9 @@ def print_markdown():
     print()
     print("| Operator | Description | Stack |")
     print("| :--- | :--- | :--- |")
-    print("| = | Print the stack | - |")
-    print("| § | Print the keyspaces | - |")
-    print("| ? | Print the operators | - |")
+    print("| = | Print the stack | No change. |")
+    print("| § | Print the keyspaces | No change. |")
+    print("| ? | Print the operators | No change. |")
 
     print()
     print("## Predefined variables")

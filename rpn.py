@@ -243,6 +243,58 @@ class Repeat(Item):
         return next(self.executor)
 
 
+class Add(Item):
+    RX = re.compile(r"\+")
+
+    def __str__(self):
+        return "add"
+
+    def __repr__(self):
+        return "add"
+
+    def __call__(self, executor):
+        executor.execute(iter([Identifier("add")]))
+
+
+class Sub(Item):
+    RX = re.compile(r"\-")
+
+    def __str__(self):
+        return "sub"
+
+    def __repr__(self):
+        return "sub"
+
+    def __call__(self, executor):
+        executor.execute(iter([Identifier("sub")]))
+
+
+class Mul(Item):
+    RX = re.compile(r"\*")
+
+    def __str__(self):
+        return "mul"
+
+    def __repr__(self):
+        return "mul"
+
+    def __call__(self, executor):
+        executor.execute(iter([Identifier("mul")]))
+
+
+class Div(Item):
+    RX = re.compile(r"/")
+
+    def __str__(self):
+        return "div"
+
+    def __repr__(self):
+        return "div"
+
+    def __call__(self, executor):
+        executor.execute(iter([Identifier("div")]))
+
+
 class Interactive(Item):
     pass
 
@@ -320,6 +372,10 @@ class Lexer:
         Array,
         ProcedureBegin,
         ProcedureEnd,
+        Add,
+        Sub,
+        Mul,
+        Div,
         Stack,
         Keyspaces,
         Operators,
@@ -538,7 +594,9 @@ class Executor:
             raise Error(str(error))
 
     def op_quit(self):
-        "Quit from execution without saving to any session file."
+        """Quit from execution without saving to any session file.
+        N/A
+        """
         sys.exit(0)
 
     def op_dump(self):
@@ -592,7 +650,7 @@ class Executor:
 
     def op_clear(self):
         """Clear all items from the stack.
-        ... => <empty>
+        ... => &lt;empty&gt;
         """
         while self.data_stack:  # Keep list the same object.
             self.data_stack.pop()
@@ -641,7 +699,7 @@ class Executor:
     def op_count(self):
         """Count the number of elements in the stack, and put
         that number on the stack.
-        ... => ... number
+        => number
         """
         self.push(Integer(len(self.data_stack)))
 
@@ -714,7 +772,7 @@ class Executor:
 
     def op_eq(self):
         """Equal to.
-        value1 value2 => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -795,7 +853,7 @@ class Executor:
 
     def op_add(self):
         """Add the two numbers on the stack.
-        value1 value2:N => value
+        value1 value2 => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -889,7 +947,9 @@ class Executor:
             print(item)
 
     def op_error(self):
-        "Raise an error."
+        """Raise an error.
+        No change.
+        """
         raise Error("an error was raised")
 
 
