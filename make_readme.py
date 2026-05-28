@@ -40,7 +40,7 @@ def print_operators(executor, title, ops):
         lines = getattr(executor, f"op_{op}").__doc__.split("\n")
         lines = [l.strip() for l in lines]
         lines = [l for l in lines if l]
-        print(f"| **{op}** | {' '.join(lines[:-1])} | {lines[-1].replace('=>', '&rarrow;') if len(lines) > 1 else ""} |")
+        print(f"| **{op}** | {' '.join(lines[:-1])} | {lines[-1].replace('=>', '&rarr;') if len(lines) > 1 else ""} |")
     print()
     
 
