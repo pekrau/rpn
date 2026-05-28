@@ -908,7 +908,7 @@ def get_command_line_parser():
     parser.add_argument(
         "-s",
         "--session",
-        help="Session file to run at startup and dump to at exit.",
+        help="Session file to run first at startup and dump to at exit.",
     )
     parser.add_argument(
         "-S",
@@ -918,15 +918,20 @@ def get_command_line_parser():
         default=False,
         help="Use the session file defined by environment variable RPN_SESSION_FILE.",
     )
+    parser.add_argument(
+        "filenames",
+        nargs="*",
+        help="Names of RPN script files to execute. If none, then interactive mode.",
+    )
     return parser
 
 
 if __name__ == "__main__":
-    args, filenames = get_command_line_parser().parse_known_args()
+    args = get_command_line_parser().parse_args()
 
     executor = Executor()
 
-    for filename in filenames:
+    for filename in args.filenames:
         filename = pathlib.Path(filename)
         if not filename.exists():
             sys.stderr.write(f"Error: file '{filename}' does not exist\n")
@@ -939,11 +944,11 @@ if __name__ == "__main__":
             with open(session) as infile:
                 executor(infile)
 
-    for filename in filenames:
+    for filename in args.filenames:
         with open(filename) as infile:
             executor(infile)
 
-    if not filenames or args.interactive:
+    if not args.filenames or args.interactive:
         executor(sys.stdin)
 
     if session:

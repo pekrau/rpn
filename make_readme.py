@@ -58,12 +58,7 @@ def print_markdown():
     print("# Demo")
     print()
     print("```")
-    for line in open("test.rpn").readlines():
-        line = line.rstrip()
-        if line.startswith("#"):
-            print(f"*{line}*")
-        else:
-            print(line)
+    print(open("test.rpn").read())
     print("```")
     
 

@@ -5,15 +5,20 @@ Interpreting calculator using Reverse Polish Notation.
 ## Invocation
 
 ```
-usage: rpn.py [-h] [-i] [-s SESSION] [-S]
+usage: rpn.py [-h] [-i] [-s SESSION] [-S] [filenames ...]
 
 Interpreting calculator using Reverse Polish Notation.
+
+positional arguments:
+  filenames             Names of RPN script files to execute. If none, then
+                        interactive mode.
 
 options:
   -h, --help            show this help message and exit
   -i, --interactive     After executing files, leave in interactive mode.
   -s SESSION, --session SESSION
-                        Session file to run at startup and dump to at exit.
+                        Session file to run first at startup and dump to at
+                        exit.
   -S, --autosession     Use the session file defined by environment variable
                         RPN_SESSION_FILE.
 ```
@@ -116,18 +121,19 @@ The following one-character operators are available only in interactive mode.
 # Demo
 
 ```
-*# Script testing rpn.*
+# Script testing rpn.
 
 /equality_check {eq {"OK" print} {"Error!" print} ifelse} def
 
 /double {2 mul} def
 
 3 double 6 equality_check
-*# > OK*
+# > OK
 
 -2 double -4 equality_check
-*# > OK*
+# > OK
 
 -2 double 4 equality_check
-*# > Error!*
+# > Error!
+
 ```
