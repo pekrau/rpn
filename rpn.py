@@ -13,7 +13,7 @@ import sys
 from icecream import ic
 
 
-__version__ = "0.6"
+__version__ = "0.6.1"
 
 
 class Error(Exception):
@@ -852,7 +852,7 @@ class Executor:
             self.push(Float(-item.value))
 
     def op_add(self):
-        """Add the two numbers on the stack.
+        """Add the two numbers on the stack. Also available as '+'.
         value1 value2 => value
         """
         item2 = self.pop(Number)
@@ -864,6 +864,7 @@ class Executor:
 
     def op_sub(self):
         """Subtract the top number on the stack from the next-to-top number.
+        Also available as '-'.
         value1 value2 => value
         """
         item2 = self.pop(Number)
@@ -874,7 +875,7 @@ class Executor:
             self.push(Float(item1.value - item2.value))
 
     def op_mul(self):
-        """Multiply the two numbers on the stack.
+        """Multiply the two numbers on the stack. Also available as '*'.
         value1 value2 => value
         """
         item2 = self.pop(Number)
@@ -886,6 +887,7 @@ class Executor:
 
     def op_div(self):
         """Divide the next-to-top number on the stack by the top number.
+        Also available as '/'.
         value1 value2 => value
         """
         item2 = self.pop(Number)

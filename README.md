@@ -1,4 +1,4 @@
-# rpn v0.6
+# rpn v0.6.1
 
 Interpreting calculator using Reverse Polish Notation.
 
@@ -85,10 +85,10 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **add** | Add the two numbers on the stack. | value1 value2 &rarr; value |
-| **sub** | Subtract the top number on the stack from the next-to-top number. | value1 value2 &rarr; value |
-| **mul** | Multiply the two numbers on the stack. | value1 value2 &rarr; value |
-| **div** | Divide the next-to-top number on the stack by the top number. | value1 value2 &rarr; value |
+| **add** | Add the two numbers on the stack. Also available as '+'. | value1 value2 &rarr; value |
+| **sub** | Subtract the top number on the stack from the next-to-top number. Also available as '-'. | value1 value2 &rarr; value |
+| **mul** | Multiply the two numbers on the stack. Also available as '*'. | value1 value2 &rarr; value |
+| **div** | Divide the next-to-top number on the stack by the top number. Also available as '/'. | value1 value2 &rarr; value |
 | **log** | Natural logarithm of the number. | value &rarr; value |
 | **log10** | Base-10 logarithm of the number. | value &rarr; value |
 | **exp** | 'e' raised to the power of the number. | value &rarr; value |
@@ -99,9 +99,9 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **length** | Return length of the item (String, Array). | item &rarr; length |
 | **abs** | Absolute value of the number. | value &rarr; value |
 | **error** | Raise an error. | No change. |
+| **length** | Return length of the item (String, Array). | item &rarr; length |
 
 ### Interactive
 
