@@ -1,4 +1,4 @@
-"Interpreter using Reverse Polish Notation."
+"Interpreting calculator using Reverse Polish Notation."
 
 import argparse
 import copy
@@ -278,7 +278,7 @@ class Keyspaces(Interactive):
 
 
 class Operators(Interactive):
-    "Print the available operators."
+    "Print information about the operators."
 
     RX = re.compile(r"\?")
 
@@ -530,7 +530,7 @@ class Executor:
 
     def op_run(self):
         """Open a new input file, read items from it and execute.
-        filename(S) => -
+        filename => -
         """
         try:
             self.execute(Lexer(open(self.pop(String).value)))
@@ -542,13 +542,15 @@ class Executor:
         sys.exit(0)
 
     def op_dump(self):
-        "Write out the current stack and keyspaces to the named file."
+        """Write out the current stack and keyspaces to the named file.
+        filename => -
+        """
         with open(self.pop(String).value, "w") as outfile:
             self.dump(outfile)
 
     def op_def(self):
         """Create a variable; a keyed item (value, array, procedure).
-        key:K item:VAP => -
+        key item => -
         """
         item = self.pop()
         key = self.pop(Key, error="Item must be a key.")
@@ -557,7 +559,7 @@ class Executor:
 
     def op_pop(self):
         """Pop the top item from the stack, and print if interactive.
-        ... item => ...
+        item => -
         """
         item = self.pop()
         if self.interactive:
@@ -573,7 +575,7 @@ class Executor:
 
     def op_copy(self):
         """Make a full copy of the item and put on the stack.
-        item => item itemcopy
+        item => item copy
         """
         item = self.pop()
         self.push(item)
@@ -597,7 +599,7 @@ class Executor:
 
     def op_if(self):
         """Conditional execution of a procedure.
-        bool:B procedure:PK => -
+        bool procedureK => -
         """
         proc = self.get_procedure(self.pop(Key, Procedure))
         if not self.pop(Bool).value:
@@ -607,7 +609,7 @@ class Executor:
     def op_ifelse(self):
         """Conditional execution of one of two procedures. If bool is true,
         the first procedure is executed, else the second.
-        bool:B procedure1:PK procedure2:PK => -
+        bool procedure1 procedure2 => -
         """
         proc_false = self.get_procedure(self.pop(Key, Procedure))
         proc_true = self.get_procedure(self.pop(Key, Procedure))
@@ -618,7 +620,7 @@ class Executor:
 
     def op_repeat(self):
         """Repeat the procedure a number of times.
-        n:I procedure:PK => -
+        n procedure => -
         """
         proc = self.get_procedure(self.pop(Key, Procedure))
         n = self.pop(Integer)
@@ -628,7 +630,7 @@ class Executor:
         """Loop the procedure from the initial value using the increment
         up to and including the limit. The loop value is pushed each time
         onto the stack before the procedure is executed.
-        initial:N increment:N limit:N procedure:PK => value:N
+        initial increment limit procedure => value
         """
         proc = self.get_procedure(self.pop(Key, Procedure))
         limit = self.pop(Number)
@@ -639,44 +641,44 @@ class Executor:
     def op_count(self):
         """Count the number of elements in the stack, and put
         that number on the stack.
-        ... => ... number:I
+        ... => ... number
         """
         self.push(Integer(len(self.data_stack)))
 
     def op_bool(self):
         """Convert the value to Bool; 0, 0.0, "" and [] are false,
         other values true.
-        value:NSA => bool:B
+        value => bool
         """
         self.push(Bool(bool(self.pop().value)))
 
     def op_not(self):
         """Bool 'not'.
-        bool:B => bool:B
+        bool => bool
         """
         self.push(Bool(not self.pop(Bool).value))
 
     def op_and(self):
         """Bool 'and'.
-        bool1:B bool2:B => bool:B
+        bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value and self.pop(Bool).value))
 
     def op_or(self):
         """Bool 'or'.
-        bool1:B bool2:B => bool:B
+        bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value or self.pop(Bool).value))
 
     def op_xor(self):
         """Bool 'xor' (exclusive or).
-        bool1:B bool2:B => bool:B
+        bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value != self.pop(Bool).value))
 
     def op_gt(self):
         """Greater than. The values must of comparable types.
-        value1:NSKA value2:NSKA => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -685,7 +687,7 @@ class Executor:
 
     def op_ge(self):
         """Greater than or equal to. The values must of comparable types.
-        value1:NSKA value2:NSKA => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -694,7 +696,7 @@ class Executor:
 
     def op_lt(self):
         """Less than. The values must of comparable types.
-        value1:NSKA value2:NSKA => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -703,7 +705,7 @@ class Executor:
 
     def op_le(self):
         """Less than or equal to. The values must of comparable types.
-        value1:NSKA value2:NSKA => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -711,8 +713,8 @@ class Executor:
         self.push(Bool(item1.value <= item2.value))
 
     def op_eq(self):
-        """Equal to. The values must of comparable types.
-        value1:NSKA value2:NSKA => bool:B
+        """Equal to.
+        value1 value2 => bool:B
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -720,7 +722,7 @@ class Executor:
 
     def op_ne(self):
         """Not equal to.
-        value1:NSKA value2:NSKA => bool:B
+        value1 value2 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -736,14 +738,14 @@ class Executor:
 
     def op_length(self):
         """Return length of the item (String, Array).
-        item:SA => length:I
+        item => length
         """
         item = self.pop(String, Array)
         self.push(Integer(len(item)))
 
     def op_integer(self):
         """Convert the value to an integer.
-        value:NSB => integer:I
+        value => integer
         """
         item = self.pop(Number, String, Bool)
         try:
@@ -753,7 +755,7 @@ class Executor:
 
     def op_round(self):
         """Convert the value to the nearest integer.
-        value:NSB => integer:I
+        value => integer
         """
         item = self.pop(Number, String, Bool)
         try:
@@ -763,7 +765,7 @@ class Executor:
 
     def op_float(self):
         """Convert the value to a float.
-        value:NSB => float:F
+        value => float
         """
         item = self.pop(Number, String, Bool)
         try:
@@ -771,9 +773,19 @@ class Executor:
         except ValueError:
             raise Error(f"cannot convert value '{item.value}' to Float")
 
+    def op_abs(self):
+        """Absolute value of the number.
+        value => value
+        """
+        item = self.pop(Number)
+        if isinstance(item, Integer):
+            self.push(Integer(abs(item.value)))
+        else:
+            self.push(Float(abs(item.value)))
+
     def op_neg(self):
         """Negate the number.
-        value:N => value:N
+        value => value
         """
         item = self.pop(Number)
         if isinstance(item, Integer):
@@ -783,7 +795,7 @@ class Executor:
 
     def op_add(self):
         """Add the two numbers on the stack.
-        value1:N value2:N => value:N
+        value1 value2:N => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -794,7 +806,7 @@ class Executor:
 
     def op_sub(self):
         """Subtract the top number on the stack from the next-to-top number.
-        value1:N value2:N => value:N
+        value1 value2 => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -805,7 +817,7 @@ class Executor:
 
     def op_mul(self):
         """Multiply the two numbers on the stack.
-        value1:N value2:N => value:N
+        value1 value2 => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -816,7 +828,7 @@ class Executor:
 
     def op_div(self):
         """Divide the next-to-top number on the stack by the top number.
-        value1:N value2:N => value:N
+        value1 value2 => value
         """
         item2 = self.pop(Number)
         if item2.value == 0:
@@ -826,7 +838,7 @@ class Executor:
 
     def op_log(self):
         """Natural logarithm of the number.
-        value:N => value:F
+        value => value
         """
         item = self.pop(Number)
         if item.value <= 0:
@@ -835,7 +847,7 @@ class Executor:
 
     def op_log10(self):
         """Base-10 logarithm of the number.
-        value:N => value:F
+        value => value
         """
         item = self.pop(Number)
         if item.value <= 0:
@@ -844,14 +856,14 @@ class Executor:
 
     def op_exp(self):
         """'e' raised to the power of the number.
-        value:N => value:F
+        value => value
         """
         item = self.pop(Number)
         self.push(Float(math.exp(item.value)))
 
     def op_power(self):
         """The next-to-top number to the power of the top number.
-        value1:N value2:N => value:F
+        value1 value2 => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -859,7 +871,7 @@ class Executor:
 
     def op_sqrt(self):
         """Square root of the number.
-        value:N => value:F
+        value => value
         """
         item = self.pop(Number)
         if item.value < 0:
@@ -870,7 +882,11 @@ class Executor:
         """Pop the top value and print it.
         item => -
         """
-        print(self.pop())
+        item = self.pop()
+        if isinstance(item, String):
+            print(item.value)
+        else:
+            print(item)
 
     def op_error(self):
         "Raise an error."
@@ -879,7 +895,7 @@ class Executor:
 
 def get_command_line_parser():
     "Return the command line parser."
-    parser = argparse.ArgumentParser(description="RPN executor")
+    parser = argparse.ArgumentParser(prog="rpn.py", description=__doc__.splitlines()[0])
     parser.add_argument(
         "-i",
         "--interactive",

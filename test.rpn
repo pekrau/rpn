@@ -1,7 +1,14 @@
-/eq_check {eq {"OK" print} {error} ifelse} def
+# Script testing rpn.
+
+/equality_check {eq {"OK" print} {"Error!" print} ifelse} def
 
 /double {2 mul} def
 
-3 double 6 eq_check
--2 double -4 eq_check
+3 double 6 equality_check
+# > OK
 
+-2 double -4 equality_check
+# > OK
+
+-2 double 4 equality_check
+# > Error!
