@@ -23,8 +23,8 @@ def print_markdown():
     print()
     all_ops = set(n[3:] for n in dir(executor) if n.startswith("op_"))
     for title, ops in [("General", ["def", "run", "count", "dump", "quit"]),
-                       ("Stack", ["print", "pop", "dup", "copy", "exch", "clear"]),
-                       ("Control", ["if", "ifelse", "repeat", "for"]),
+                       ("Stack", ["print", "pop", "dup", "exch", "clear"]),
+                       ("Control", ["if", "ifelse", "loop", "repeat", "for"]),
                        ("Logic", ["bool", "not", "and", "or", "xor", "gt",
                                   "ge", "lt", "le", "eq", "ne"]),
                        ("Numbers", ["integer", "round", "float", "abs", "neg"]),

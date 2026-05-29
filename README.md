@@ -1,4 +1,4 @@
-# rpn v0.6.1
+# rpn v0.7
 
 Interpreting calculator using Reverse Polish Notation.
 
@@ -42,8 +42,7 @@ options:
 | :--- | :--- | :--- |
 | **print** | Pop the top value and print it. | item &rarr; - |
 | **pop** | Pop the top item from the stack, and print if interactive. | item &rarr; - |
-| **dup** | Duplicate the top item. Just the reference, not a full copy. | item &rarr; item item |
-| **copy** | Make a full copy of the item and put on the stack. | item &rarr; item copy |
+| **dup** | Duplicate the top item. A full copy is created. | item &rarr; item item |
 | **exch** | Exchange the two top items on the stack. | item1 item2 &rarr; item2 item1 |
 | **clear** | Clear all items from the stack. | ... &rarr; &lt;empty&gt; |
 
@@ -53,6 +52,7 @@ options:
 | :--- | :--- | :--- |
 | **if** | Conditional execution of a procedure. | bool procedureK &rarr; - |
 | **ifelse** | Conditional execution of one of two procedures. If bool is true, the first procedure is executed, else the second. | bool procedure1 procedure2 &rarr; - |
+| **loop** | Infinite loop over the procedure. Use operator 'exit' to quit it. | procedure &rarr; - |
 | **repeat** | Repeat the procedure a number of times. | n procedure &rarr; - |
 | **for** | Loop the procedure from the initial value using the increment up to and including the limit. The loop value is pushed each time onto the stack before the procedure is executed. | initial increment limit procedure &rarr; value |
 
@@ -101,7 +101,9 @@ options:
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
 | **error** | Raise an error. | No change. |
+| **exit** | Exit the innermost loop. In none, then no action. | - |
 | **length** | Return length of the item (String, Array). | item &rarr; length |
+| **noop** | No operation. | No change. |
 
 ### Interactive
 

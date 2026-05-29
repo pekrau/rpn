@@ -13,7 +13,10 @@ import sys
 from icecream import ic
 
 
-__version__ = "0.6.1"
+__version__ = "0.7"
+
+
+MAX_LOOP = 10_000_000
 
 
 class Error(Exception):
@@ -220,7 +223,26 @@ class Procedure(Item):
         self.code.append(item)
 
 
-class Repeat(Item):
+class Loop(Item):
+    pass
+
+    def __init__(self, executor, proc):
+        self.executor = executor
+        self.proc = proc
+        self.i = 0
+
+    def __str__(self):
+        return f"Loop {self.proc}"
+
+    def __next__(self):
+        if MAX_LOOP and self.i > MAX_LOOP:
+            raise StopIteration
+        self.i += 1
+        self.executor.execute(iter(self.proc))
+        return next(self.executor)
+
+
+class Repeat(Loop):
     "Repeat the procedure a number of times."
 
     def __init__(self, executor, n, proc):
@@ -232,14 +254,42 @@ class Repeat(Item):
     def __str__(self):
         return f"Repeat {self.n} ({self.start}) {self.proc}"
 
-    def __iter__(self):
-        return self
-
     def __next__(self):
         if self.n <= 0:
             raise StopIteration
         self.n -= 1
         self.executor.execute(iter(self.proc))
+        return next(self.executor)
+
+
+class For(Loop):
+    "For-loop executing the procedure from initial to and including limit by increment."
+
+    def __init__(self, executor, initial, increment, limit, proc):
+        self.executor = executor
+        self.initial = initial.value
+        self.increment = increment.value
+        self.limit = limit.value
+        self.proc = proc
+        self.current = self.initial
+        if isinstance(initial, Integer) and isinstance(increment, Integer) and isinstance(limit, Integer):
+            self.value_class = Integer
+        else:
+            self.value_class = Float
+
+    def __str__(self):
+        return f"For {self.current} ({self.initial, self.increment, self.limit}) {self.proc}"
+
+    def __next__(self):
+        if self.increment < 0:
+            if self.current < self.limit:
+                raise StopIteration
+        else:
+            if self.current > self.limit:
+                raise StopIteration
+        self.executor.push(self.value_class(self.current))
+        self.executor.execute(iter(self.proc))
+        self.current += self.increment
         return next(self.executor)
 
 
@@ -447,10 +497,10 @@ class Executor:
                 item(self)
             except Error as error:
                 sys.stderr.write(f"Error: {error}\n")
-                sys.stderr.write("--- traceback\n")
+                sys.stderr.write("--- traceback ---\n")
                 for source in reversed(self.exec_stack):
                     sys.stderr.write(f"  {source}\n")
-                sys.stderr.write("--- stack\n")
+                sys.stderr.write("--- stack ---\n")
                 for item in reversed(self.data_stack[:3]):
                     sys.stderr.write(f"  {item}\n")
                 if len(self.data_stack) == 0:
@@ -588,8 +638,12 @@ class Executor:
         """Open a new input file, read items from it and execute.
         filename => -
         """
+        filename = self.pop(String).value
+        for item in self.exec_stack:
+            if item.name == filename:
+                raise Error(f"already running 'filename'; invalid infinite loop")
         try:
-            self.execute(Lexer(open(self.pop(String).value)))
+            self.execute(Lexer(open(filename)))
         except IOError as error:
             raise Error(str(error))
 
@@ -624,16 +678,8 @@ class Executor:
             print(item)
 
     def op_dup(self):
-        """Duplicate the top item. Just the reference, not a full copy.
+        """Duplicate the top item. A full copy is created.
         item => item item
-        """
-        item = self.pop()
-        self.push(item)
-        self.push(item)
-
-    def op_copy(self):
-        """Make a full copy of the item and put on the stack.
-        item => item copy
         """
         item = self.pop()
         self.push(item)
@@ -676,6 +722,13 @@ class Executor:
         else:
             self.execute(iter(proc_false))
 
+    def op_loop(self):
+        """Infinite loop over the procedure. Use operator 'exit' to quit it.
+        procedure => -
+        """
+        proc = self.get_procedure(self.pop(Key, Procedure))
+        self.execute(Loop(self, proc))
+
     def op_repeat(self):
         """Repeat the procedure a number of times.
         n procedure => -
@@ -694,7 +747,18 @@ class Executor:
         limit = self.pop(Number)
         increment = self.pop(Number)
         initial = self.pop(Number)
-        self.execute(For(initial, increment, limit, proc))
+        self.execute(For(self, initial, increment, limit, proc))
+
+    def op_exit(self):
+        "Exit the innermost loop. In none, then no action."
+        for source in reversed(self.exec_stack):
+            if isinstance(source, Loop):
+                break
+        else:
+            return
+        while self.exec_stack:
+            if isinstance(self.exec_stack.pop(), Loop):
+                break
 
     def op_count(self):
         """Count the number of elements in the stack, and put
@@ -953,6 +1017,19 @@ class Executor:
         No change.
         """
         raise Error("an error was raised")
+
+    def max_loop(self):
+        """Set the maximum loop limit. Must be at least 1.
+        integer => -
+        """
+        global MAX_LOOP
+        MAX_LOOP = max(1, self.pop(Integer))
+
+    def op_noop(self):
+        """No operation.
+        No change.
+        """
+        pass
 
 
 def get_command_line_parser():
