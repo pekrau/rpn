@@ -13,7 +13,7 @@ import sys
 from icecream import ic
 
 
-__version__ = "0.7"
+__version__ = "0.7.1"
 
 
 MAX_LOOP = 10_000_000
@@ -634,6 +634,26 @@ class Executor:
                 raise Error(f"'{value}' does not refer to a procedure")
         return item
 
+    def op_def(self):
+        """Create a variable in the current keyspace.
+        A variable is a keyed item (value, array, procedure).
+        key item => -
+        """
+        item = self.pop()
+        key = self.pop(Key)
+        item.location = str(self.lexer)
+        self.keyspaces[-1][key.value] = item
+
+    def op_del(self):
+        """Delete a variable from the current keyspace.
+        If no such variable, then no effect.
+        key => -
+        """
+        try:
+            self.keyspaces[-1].pop(self.pop(Key).value)
+        except KeyError:
+            pass
+
     def op_run(self):
         """Open a new input file, read items from it and execute.
         filename => -
@@ -647,11 +667,12 @@ class Executor:
         except IOError as error:
             raise Error(str(error))
 
-    def op_quit(self):
-        """Quit from execution without saving to any session file.
-        N/A
+    def op_count(self):
+        """Count the number of elements in the stack, and put
+        that number on the stack.
+        => number
         """
-        sys.exit(0)
+        self.push(Integer(len(self.data_stack)))
 
     def op_dump(self):
         """Write out the current stack and keyspaces to the named file.
@@ -660,14 +681,11 @@ class Executor:
         with open(self.pop(String).value, "w") as outfile:
             self.dump(outfile)
 
-    def op_def(self):
-        """Create a variable; a keyed item (value, array, procedure).
-        key item => -
+    def op_quit(self):
+        """Quit from execution without saving to any session file.
+        N/A
         """
-        item = self.pop()
-        key = self.pop(Key, error="Item must be a key.")
-        item.location = str(self.lexer)
-        self.keyspaces[-1][key.value] = item
+        sys.exit(0)
 
     def op_pop(self):
         """Pop the top item from the stack, and print if interactive.
@@ -700,6 +718,16 @@ class Executor:
         """
         while self.data_stack:  # Keep list the same object.
             self.data_stack.pop()
+
+    def op_print(self):
+        """Pop the top value and print it.
+        item => -
+        """
+        item = self.pop()
+        if isinstance(item, String):
+            print(item.value)
+        else:
+            print(item)
 
     def op_if(self):
         """Conditional execution of a procedure.
@@ -760,13 +788,6 @@ class Executor:
             if isinstance(self.exec_stack.pop(), Loop):
                 break
 
-    def op_count(self):
-        """Count the number of elements in the stack, and put
-        that number on the stack.
-        => number
-        """
-        self.push(Integer(len(self.data_stack)))
-
     def op_bool(self):
         """Convert the value to Bool; 0, 0.0, "" and [] are false,
         other values true.
@@ -799,8 +820,8 @@ class Executor:
         self.push(Bool(self.pop(Bool).value != self.pop(Bool).value))
 
     def op_gt(self):
-        """Greater than. The values must of comparable types.
-        value1 value2 => bool
+        """Greater than; value1 > value2. The values must of comparable types.
+        value2 value1 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -808,8 +829,9 @@ class Executor:
         self.push(Bool(item1.value > item2.value))
 
     def op_ge(self):
-        """Greater than or equal to. The values must of comparable types.
-        value1 value2 => bool
+        """Greater than or equal to; value1 >= value2.
+        The values must of comparable types.
+        value2 value1 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -817,8 +839,8 @@ class Executor:
         self.push(Bool(item1.value >= item2.value))
 
     def op_lt(self):
-        """Less than. The values must of comparable types.
-        value1 value2 => bool
+        """Less than; value1 < value2. The values must of comparable types.
+        value2 value1 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -826,8 +848,8 @@ class Executor:
         self.push(Bool(item1.value < item2.value))
 
     def op_le(self):
-        """Less than or equal to. The values must of comparable types.
-        value1 value2 => bool
+        """Less than or equal to; value1 <= value2. The values must of comparable types.
+        value2 value1 => bool
         """
         item2 = self.pop()
         item1 = self.pop()
@@ -835,7 +857,7 @@ class Executor:
         self.push(Bool(item1.value <= item2.value))
 
     def op_eq(self):
-        """Equal to.
+        """Equal to; value1 == value2.
         value1 value2 => bool
         """
         item2 = self.pop()
@@ -843,7 +865,7 @@ class Executor:
         self.push(Bool(item1.value == item2.value))
 
     def op_ne(self):
-        """Not equal to.
+        """Not equal to; value1 != value2.
         value1 value2 => bool
         """
         item2 = self.pop()
@@ -857,13 +879,6 @@ class Executor:
             or (isinstance(item1, Array) and isinstance(item2, Array))
         ):
             raise Error(f"item type {item2.type} and {item1.type} are not comparable")
-
-    def op_length(self):
-        """Return length of the item (String, Array).
-        item => length
-        """
-        item = self.pop(String, Array)
-        self.push(Integer(len(item)))
 
     def op_integer(self):
         """Convert the value to an integer.
@@ -927,8 +942,8 @@ class Executor:
             self.push(Float(item1.value + item2.value))
 
     def op_sub(self):
-        """Subtract the top number on the stack from the next-to-top number.
-        Also available as '-'.
+        """Subtract the top number on the stack from the next-to-top number;
+        value1 - value2. Also available as '-'.
         value1 value2 => value
         """
         item2 = self.pop(Number)
@@ -950,8 +965,8 @@ class Executor:
             self.push(Float(item1.value * item2.value))
 
     def op_div(self):
-        """Divide the next-to-top number on the stack by the top number.
-        Also available as '/'.
+        """Divide the next-to-top number on the stack by the top number;
+        value1 / value2. Also available as '/'.
         value1 value2 => value
         """
         item2 = self.pop(Number)
@@ -986,12 +1001,15 @@ class Executor:
         self.push(Float(math.exp(item.value)))
 
     def op_power(self):
-        """The next-to-top number to the power of the top number.
+        """The next-to-top number to the power of the top number; value1 ^ value2.
         value1 value2 => value
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
-        self.push(Float(math.pow(item2, item1)))
+        if isinstance(item1, Integer) and isinstance(item2, Integer) and item2.value <= 0:
+            self.push(Integer(item1.value ** item2.value))
+        else:
+            self.push(Float(math.pow(item1.value, item2.value)))
 
     def op_sqrt(self):
         """Square root of the number.
@@ -1002,15 +1020,78 @@ class Executor:
             raise Error("cannot take square root of value less than zero")
         self.push(Float(math.sqrt(item.value)))
 
-    def op_print(self):
-        """Pop the top value and print it.
-        item => -
+    def op_cos(self):
+        """Cosine of the number (radians).
+        value => value
         """
-        item = self.pop()
-        if isinstance(item, String):
-            print(item.value)
-        else:
-            print(item)
+        item = self.pop(Number)
+        self.push(Float(math.cos(item.value)))
+
+    def op_sin(self):
+        """Sine of the number (radians).
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.sin(item.value)))
+
+    def op_tan(self):
+        """Tangent of the number (radians).
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.tan(item.value)))
+
+    def op_acos(self):
+        """Arc cosine of the number (radians).
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.acos(item.value)))
+
+    def op_asin(self):
+        """Arc sine of the number (radians).
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.asin(item.value)))
+
+    def op_atan(self):
+        """Arc tangent of the number (radians).
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.atan(item.value)))
+
+    def op_atan2(self):
+        """Arc tangent of the next-to-top number divided by the top number (radians).
+        value1 value2 => value
+        """
+        item2 = self.pop(Number)
+        item1 = self.pop(Number)
+        if item2.value == 0:
+            raise Error("denominator for atan2 must not be zero")
+        self.push(Float(math.atan2(item1.value, item2.value)))
+
+    def op_degrees(self):
+        """Convert the value in radians to degrees.
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.degrees(item.value)))
+
+    def op_radians(self):
+        """Convert the value in degrees to radians.
+        value => value
+        """
+        item = self.pop(Number)
+        self.push(Float(math.radians(item.value)))
+
+    def op_length(self):
+        """Return length of the item (String, Array).
+        item => length
+        """
+        item = self.pop(String, Array)
+        self.push(Integer(len(item)))
 
     def op_error(self):
         """Raise an error.

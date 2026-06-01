@@ -1,4 +1,4 @@
-# rpn v0.7
+# rpn v0.7.1
 
 Interpreting calculator using Reverse Polish Notation.
 
@@ -30,7 +30,8 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **def** | Create a variable; a keyed item (value, array, procedure). | key item &rarr; - |
+| **def** | Create a variable in the current keyspace. A variable is a keyed item (value, array, procedure). | key item &rarr; - |
+| **del** | Delete a variable from the current keyspace. If no such variable, then no effect. | key &rarr; - |
 | **run** | Open a new input file, read items from it and execute. | filename &rarr; - |
 | **count** | Count the number of elements in the stack, and put that number on the stack. | &rarr; number |
 | **dump** | Write out the current stack and keyspaces to the named file. | filename &rarr; - |
@@ -40,11 +41,11 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **print** | Pop the top value and print it. | item &rarr; - |
 | **pop** | Pop the top item from the stack, and print if interactive. | item &rarr; - |
 | **dup** | Duplicate the top item. A full copy is created. | item &rarr; item item |
 | **exch** | Exchange the two top items on the stack. | item1 item2 &rarr; item2 item1 |
 | **clear** | Clear all items from the stack. | ... &rarr; &lt;empty&gt; |
+| **print** | Pop the top value and print it. | item &rarr; - |
 
 ### Control
 
@@ -55,6 +56,7 @@ options:
 | **loop** | Infinite loop over the procedure. Use operator 'exit' to quit it. | procedure &rarr; - |
 | **repeat** | Repeat the procedure a number of times. | n procedure &rarr; - |
 | **for** | Loop the procedure from the initial value using the increment up to and including the limit. The loop value is pushed each time onto the stack before the procedure is executed. | initial increment limit procedure &rarr; value |
+| **exit** | Exit the innermost loop. In none, then no action. | - |
 
 ### Logic
 
@@ -65,12 +67,12 @@ options:
 | **and** | Bool 'and'. | bool1 bool2 &rarr; bool |
 | **or** | Bool 'or'. | bool1 bool2 &rarr; bool |
 | **xor** | Bool 'xor' (exclusive or). | bool1 bool2 &rarr; bool |
-| **gt** | Greater than. The values must of comparable types. | value1 value2 &rarr; bool |
-| **ge** | Greater than or equal to. The values must of comparable types. | value1 value2 &rarr; bool |
-| **lt** | Less than. The values must of comparable types. | value1 value2 &rarr; bool |
-| **le** | Less than or equal to. The values must of comparable types. | value1 value2 &rarr; bool |
-| **eq** | Equal to. | value1 value2 &rarr; bool |
-| **ne** | Not equal to. | value1 value2 &rarr; bool |
+| **gt** | Greater than; value1 > value2. The values must of comparable types. | value2 value1 &rarr; bool |
+| **ge** | Greater than or equal to; value1 >= value2. The values must of comparable types. | value2 value1 &rarr; bool |
+| **lt** | Less than; value1 < value2. The values must of comparable types. | value2 value1 &rarr; bool |
+| **le** | Less than or equal to; value1 <= value2. The values must of comparable types. | value2 value1 &rarr; bool |
+| **eq** | Equal to; value1 == value2. | value1 value2 &rarr; bool |
+| **ne** | Not equal to; value1 != value2. | value1 value2 &rarr; bool |
 
 ### Numbers
 
@@ -87,22 +89,35 @@ options:
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
 | **add** | Add the two numbers on the stack. Also available as '+'. | value1 value2 &rarr; value |
-| **sub** | Subtract the top number on the stack from the next-to-top number. Also available as '-'. | value1 value2 &rarr; value |
+| **sub** | Subtract the top number on the stack from the next-to-top number; value1 - value2. Also available as '-'. | value1 value2 &rarr; value |
 | **mul** | Multiply the two numbers on the stack. Also available as '*'. | value1 value2 &rarr; value |
-| **div** | Divide the next-to-top number on the stack by the top number. Also available as '/'. | value1 value2 &rarr; value |
+| **div** | Divide the next-to-top number on the stack by the top number; value1 / value2. Also available as '/'. | value1 value2 &rarr; value |
 | **log** | Natural logarithm of the number. | value &rarr; value |
 | **log10** | Base-10 logarithm of the number. | value &rarr; value |
 | **exp** | 'e' raised to the power of the number. | value &rarr; value |
-| **power** | The next-to-top number to the power of the top number. | value1 value2 &rarr; value |
+| **power** | The next-to-top number to the power of the top number; value1 ^ value2. | value1 value2 &rarr; value |
 | **sqrt** | Square root of the number. | value &rarr; value |
+
+### Trigonometry
+
+| Operator | Description | Stack |
+| :--- | :--- | :--- |
+| **cos** | Cosine of the number (radians). | value &rarr; value |
+| **sin** | Sine of the number (radians). | value &rarr; value |
+| **tan** | Tangent of the number (radians). | value &rarr; value |
+| **acos** | Arc cosine of the number (radians). | value &rarr; value |
+| **asin** | Arc sine of the number (radians). | value &rarr; value |
+| **atan** | Arc tangent of the number (radians). | value &rarr; value |
+| **atan2** | Arc tangent of the next-to-top number divided by the top number (radians). | value1 value2 &rarr; value |
+| **degrees** | Convert the value in radians to degrees. | value &rarr; value |
+| **radians** | Convert the value in degrees to radians. | value &rarr; value |
 
 ### Others
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **error** | Raise an error. | No change. |
-| **exit** | Exit the innermost loop. In none, then no action. | - |
 | **length** | Return length of the item (String, Array). | item &rarr; length |
+| **error** | Raise an error. | No change. |
 | **noop** | No operation. | No change. |
 
 ### Interactive

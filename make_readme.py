@@ -22,14 +22,16 @@ def print_markdown():
     print("## Operators")
     print()
     all_ops = set(n[3:] for n in dir(executor) if n.startswith("op_"))
-    for title, ops in [("General", ["def", "run", "count", "dump", "quit"]),
-                       ("Stack", ["print", "pop", "dup", "exch", "clear"]),
-                       ("Control", ["if", "ifelse", "loop", "repeat", "for"]),
-                       ("Logic", ["bool", "not", "and", "or", "xor", "gt",
-                                  "ge", "lt", "le", "eq", "ne"]),
+    for title, ops in [("General", ["def", "del", "run", "count", "dump", "quit"]),
+                       ("Stack", ["pop", "dup", "exch", "clear", "print"]),
+                       ("Control", ["if", "ifelse", "loop", "repeat", "for", "exit"]),
+                       ("Logic", ["bool", "not", "and", "or", "xor", 
+                                  "gt", "ge", "lt", "le", "eq", "ne"]),
                        ("Numbers", ["integer", "round", "float", "abs", "neg"]),
                        ("Math", ["add", "sub", "mul", "div", "log", "log10",
                                  "exp", "power", "sqrt"]),
+                       ("Trigonometry", ["cos", "sin", "tan", "acos", "asin", "atan",
+                                         "atan2", "degrees", "radians"]),
                        ]:
         print_operators(executor, title, ops)
         all_ops.difference_update(ops)
