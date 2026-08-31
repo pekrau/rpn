@@ -1,4 +1,4 @@
-# rpn v0.7.1
+# rpn v0.7.2
 
 Interpreting calculator using Reverse Polish Notation.
 
@@ -33,7 +33,7 @@ options:
 | **def** | Create a variable in the current keyspace. A variable is a keyed item (value, array, procedure). | key item &rarr; - |
 | **del** | Delete a variable from the current keyspace. If no such variable, then no effect. | key &rarr; - |
 | **run** | Open a new input file, read items from it and execute. | filename &rarr; - |
-| **count** | Count the number of elements in the stack, and put that number on the stack. | &rarr; number |
+| **count** | Count the number of elements in the stack, and put that integer on the stack. | &rarr; integer |
 | **dump** | Write out the current stack and keyspaces to the named file. | filename &rarr; - |
 | **quit** | Quit from execution without saving to any session file. | N/A |
 
@@ -51,11 +51,11 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **if** | Conditional execution of a procedure. | bool procedureK &rarr; - |
+| **if** | Conditional execution of a procedure. | bool procedure &rarr; - |
 | **ifelse** | Conditional execution of one of two procedures. If bool is true, the first procedure is executed, else the second. | bool procedure1 procedure2 &rarr; - |
 | **loop** | Infinite loop over the procedure. Use operator 'exit' to quit it. | procedure &rarr; - |
 | **repeat** | Repeat the procedure a number of times. | n procedure &rarr; - |
-| **for** | Loop the procedure from the initial value using the increment up to and including the limit. The loop value is pushed each time onto the stack before the procedure is executed. | initial increment limit procedure &rarr; value |
+| **for** | Loop the procedure from the initial number using the increment up to and including the limit. The loop number is pushed each time onto the stack before the procedure is executed. | initial increment limit procedure &rarr; value |
 | **exit** | Exit the innermost loop. In none, then no action. | - |
 
 ### Logic
@@ -63,10 +63,10 @@ options:
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
 | **bool** | Convert the value to Bool; 0, 0.0, "" and [] are false, other values true. | value &rarr; bool |
-| **not** | Bool 'not'. | bool &rarr; bool |
-| **and** | Bool 'and'. | bool1 bool2 &rarr; bool |
-| **or** | Bool 'or'. | bool1 bool2 &rarr; bool |
-| **xor** | Bool 'xor' (exclusive or). | bool1 bool2 &rarr; bool |
+| **not** | Boolean 'not'. | bool &rarr; bool |
+| **and** | Boolean 'and'. | bool1 bool2 &rarr; bool |
+| **or** | Boolean 'or'. | bool1 bool2 &rarr; bool |
+| **xor** | Boolean 'xor' (exclusive or). | bool1 bool2 &rarr; bool |
 | **gt** | Greater than; value1 > value2. The values must of comparable types. | value2 value1 &rarr; bool |
 | **ge** | Greater than or equal to; value1 >= value2. The values must of comparable types. | value2 value1 &rarr; bool |
 | **lt** | Less than; value1 < value2. The values must of comparable types. | value2 value1 &rarr; bool |
@@ -81,44 +81,44 @@ options:
 | **integer** | Convert the value to an integer. | value &rarr; integer |
 | **round** | Convert the value to the nearest integer. | value &rarr; integer |
 | **float** | Convert the value to a float. | value &rarr; float |
-| **abs** | Absolute value of the number. | value &rarr; value |
-| **neg** | Negate the number. | value &rarr; value |
+| **abs** | Absolute value of the number. | number &rarr; number |
+| **neg** | Negate the number. | number &rarr; number |
 
 ### Math
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **add** | Add the two numbers on the stack. Also available as '+'. | value1 value2 &rarr; value |
-| **sub** | Subtract the top number on the stack from the next-to-top number; value1 - value2. Also available as '-'. | value1 value2 &rarr; value |
-| **mul** | Multiply the two numbers on the stack. Also available as '*'. | value1 value2 &rarr; value |
-| **div** | Divide the next-to-top number on the stack by the top number; value1 / value2. Also available as '/'. | value1 value2 &rarr; value |
-| **log** | Natural logarithm of the number. | value &rarr; value |
-| **log10** | Base-10 logarithm of the number. | value &rarr; value |
-| **exp** | 'e' raised to the power of the number. | value &rarr; value |
-| **power** | The next-to-top number to the power of the top number; value1 ^ value2. | value1 value2 &rarr; value |
-| **sqrt** | Square root of the number. | value &rarr; value |
+| **add** | Add the two numbers on the stack. Also available as '+'. | number1 number2 &rarr; number |
+| **sub** | Subtract the top number on the stack from the next-to-top number; number1 - number2. Also available as '-'. | number1 number2 &rarr; number |
+| **mul** | Multiply the two numbers on the stack. Also available as '*'. | number1 number2 &rarr; number |
+| **div** | Divide the next-to-top number on the stack by the top number; number1 / number2. Also available as '/'. | number1 number2 &rarr; float |
+| **log** | Natural logarithm of the number. | number &rarr; float |
+| **log10** | Base-10 logarithm of the number. | number &rarr; float |
+| **exp** | 'e' raised to the power of the number. | number &rarr; float |
+| **power** | The next-to-top number to the power of the top number; number1 ^ number2. | number1 number2 &rarr; number |
+| **sqrt** | Square root of the number. | number &rarr; float |
 
 ### Trigonometry
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **cos** | Cosine of the number (radians). | value &rarr; value |
-| **sin** | Sine of the number (radians). | value &rarr; value |
-| **tan** | Tangent of the number (radians). | value &rarr; value |
-| **acos** | Arc cosine of the number (radians). | value &rarr; value |
-| **asin** | Arc sine of the number (radians). | value &rarr; value |
-| **atan** | Arc tangent of the number (radians). | value &rarr; value |
-| **atan2** | Arc tangent of the next-to-top number divided by the top number (radians). | value1 value2 &rarr; value |
-| **degrees** | Convert the value in radians to degrees. | value &rarr; value |
-| **radians** | Convert the value in degrees to radians. | value &rarr; value |
+| **cos** | Cosine of the number (radians). | number &rarr; float |
+| **sin** | Sine of the number (radians). | number &rarr; float |
+| **tan** | Tangent of the number (radians). | number &rarr; float |
+| **acos** | Arc cosine of the number (radians). | number &rarr; float |
+| **asin** | Arc sine of the number (radians). | number &rarr; float |
+| **atan** | Arc tangent of the number (radians). | number &rarr; float |
+| **atan2** | Arc tangent of the next-to-top number divided by the top number (radians). | number1 number2 &rarr; float |
+| **degrees** | Convert the number in radians to degrees. | number &rarr; float |
+| **radians** | Convert the number in degrees to radians. | number &rarr; float |
 
 ### Others
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **length** | Return length of the item (String, Array). | item &rarr; length |
-| **error** | Raise an error. | No change. |
 | **noop** | No operation. | No change. |
+| **length** | Return length of the item (String, Array). | item &rarr; integer |
+| **error** | Raise an error. | No change. |
 
 ### Interactive
 

@@ -13,7 +13,7 @@ import sys
 from icecream import ic
 
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 
 MAX_LOOP = 10_000_000
@@ -123,13 +123,13 @@ class Integer(Number):
 
 
 class String(Value):
-    RX = re.compile(r'".*?"')
+    RX = re.compile(r'".*?(?<!\\)"')
 
     def __init__(self, value):
-        self.value = value.strip('"')
+        self.value = value.strip('"').replace('\\"', '"')
 
     def __str__(self):
-        return f'"{self.value}"'
+        return f'"{self.value.replace('''"''', '''\\"''')}"'
 
     def __repr__(self):
         return f'{self.__class__.__name__} "{self.value}"'
@@ -350,7 +350,7 @@ class Interactive(Item):
 
 
 class Stack(Interactive):
-    "Print the stack items."
+    "Print the data stack items."
 
     RX = re.compile(r"=")
 
@@ -360,7 +360,8 @@ class Stack(Interactive):
     def __call__(self, executor):
         if executor.interactive:
             for item in reversed(executor.data_stack):
-                print(f" {item}")
+                print(f"  {item}")
+            executor.do_display = False
 
 
 class Keyspaces(Interactive):
@@ -432,8 +433,9 @@ class Lexer:
         Unknown,
     ]
 
-    def __init__(self, infile):
+    def __init__(self, executor, infile):
         "If non-interactive, infile is closed when its end has been reached."
+        self.executor = executor
         self.infile = infile
         self.name = infile.name
         self.line = ""
@@ -453,6 +455,7 @@ class Lexer:
     def __next__(self):
         while self.span[1] >= len(self.line):
             if self.interactive:
+                self.executor.display()
                 try:
                     line = input("rpn > ")
                 except (EOFError, KeyboardInterrupt):
@@ -488,10 +491,11 @@ class Executor:
         self.exec_stack = []
         self.data_stack = []
         self.keyspaces = [{"e": Float(math.e), "pi": Float(math.pi)}]
+        self.do_display = True
 
     def __call__(self, infile):
         "Parse and execute the items from the input file."
-        self.exec_stack.append(Lexer(infile))
+        self.exec_stack.append(Lexer(self, infile))
         for item in self:
             try:
                 item(self)
@@ -507,6 +511,7 @@ class Executor:
                     sys.stderr.write("  <empty>\n")
                 if len(self.data_stack) > 3:
                     sys.stderr.write(" ...\n")
+                self.do_display = False
                 if self.interactive:
                     while len(self.exec_stack) != 1:
                         source = self.exec_stack.pop()
@@ -548,6 +553,15 @@ class Executor:
             except KeyError:
                 pass
         raise KeyError(identifier)
+
+    def display(self):
+        if self.do_display:
+            if self.data_stack:
+                print(f"  {self.data_stack[-1]}")
+            else:
+                print("  <empty>")
+        else:
+            self.do_display = True
 
     def dereference(self, identifier):
         "Dereference the identifer."
@@ -663,14 +677,14 @@ class Executor:
             if item.name == filename:
                 raise Error(f"already running 'filename'; invalid infinite loop")
         try:
-            self.execute(Lexer(open(filename)))
+            self.execute(Lexer(self, open(filename)))
         except IOError as error:
             raise Error(str(error))
 
     def op_count(self):
         """Count the number of elements in the stack, and put
-        that number on the stack.
-        => number
+        that integer on the stack.
+        => integer
         """
         self.push(Integer(len(self.data_stack)))
 
@@ -693,7 +707,8 @@ class Executor:
         """
         item = self.pop()
         if self.interactive:
-            print(item)
+            print(f"  {item}")
+            self.do_display = False
 
     def op_dup(self):
         """Duplicate the top item. A full copy is created.
@@ -731,7 +746,7 @@ class Executor:
 
     def op_if(self):
         """Conditional execution of a procedure.
-        bool procedureK => -
+        bool procedure => -
         """
         proc = self.get_procedure(self.pop(Key, Procedure))
         if not self.pop(Bool).value:
@@ -766,8 +781,8 @@ class Executor:
         self.execute(Repeat(self, n, proc))
 
     def op_for(self):
-        """Loop the procedure from the initial value using the increment
-        up to and including the limit. The loop value is pushed each time
+        """Loop the procedure from the initial number using the increment
+        up to and including the limit. The loop number is pushed each time
         onto the stack before the procedure is executed.
         initial increment limit procedure => value
         """
@@ -796,25 +811,25 @@ class Executor:
         self.push(Bool(bool(self.pop().value)))
 
     def op_not(self):
-        """Bool 'not'.
+        """Boolean 'not'.
         bool => bool
         """
         self.push(Bool(not self.pop(Bool).value))
 
     def op_and(self):
-        """Bool 'and'.
+        """Boolean 'and'.
         bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value and self.pop(Bool).value))
 
     def op_or(self):
-        """Bool 'or'.
+        """Boolean 'or'.
         bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value or self.pop(Bool).value))
 
     def op_xor(self):
-        """Bool 'xor' (exclusive or).
+        """Boolean 'xor' (exclusive or).
         bool1 bool2 => bool
         """
         self.push(Bool(self.pop(Bool).value != self.pop(Bool).value))
@@ -912,7 +927,7 @@ class Executor:
 
     def op_abs(self):
         """Absolute value of the number.
-        value => value
+        number => number
         """
         item = self.pop(Number)
         if isinstance(item, Integer):
@@ -922,7 +937,7 @@ class Executor:
 
     def op_neg(self):
         """Negate the number.
-        value => value
+        number => number
         """
         item = self.pop(Number)
         if isinstance(item, Integer):
@@ -932,7 +947,7 @@ class Executor:
 
     def op_add(self):
         """Add the two numbers on the stack. Also available as '+'.
-        value1 value2 => value
+        number1 number2 => number
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -943,8 +958,8 @@ class Executor:
 
     def op_sub(self):
         """Subtract the top number on the stack from the next-to-top number;
-        value1 - value2. Also available as '-'.
-        value1 value2 => value
+        number1 - number2. Also available as '-'.
+        number1 number2 => number
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -955,7 +970,7 @@ class Executor:
 
     def op_mul(self):
         """Multiply the two numbers on the stack. Also available as '*'.
-        value1 value2 => value
+        number1 number2 => number
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -966,8 +981,8 @@ class Executor:
 
     def op_div(self):
         """Divide the next-to-top number on the stack by the top number;
-        value1 / value2. Also available as '/'.
-        value1 value2 => value
+        number1 / number2. Also available as '/'.
+        number1 number2 => float
         """
         item2 = self.pop(Number)
         if item2.value == 0:
@@ -977,32 +992,32 @@ class Executor:
 
     def op_log(self):
         """Natural logarithm of the number.
-        value => value
+        number => float
         """
         item = self.pop(Number)
         if item.value <= 0:
-            raise Error("cannot take log of value less or equal to zero")
+            raise Error("cannot take log of number less or equal to zero")
         self.push(Float(math.log(item.value)))
 
     def op_log10(self):
         """Base-10 logarithm of the number.
-        value => value
+        number => float
         """
         item = self.pop(Number)
         if item.value <= 0:
-            raise Error("cannot take log10 of value less or equal to zero")
+            raise Error("cannot take log10 of number less or equal to zero")
         self.push(Float(math.log10(item.value)))
 
     def op_exp(self):
         """'e' raised to the power of the number.
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.exp(item.value)))
 
     def op_power(self):
-        """The next-to-top number to the power of the top number; value1 ^ value2.
-        value1 value2 => value
+        """The next-to-top number to the power of the top number; number1 ^ number2.
+        number1 number2 => number
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -1013,58 +1028,58 @@ class Executor:
 
     def op_sqrt(self):
         """Square root of the number.
-        value => value
+        number => float
         """
         item = self.pop(Number)
         if item.value < 0:
-            raise Error("cannot take square root of value less than zero")
+            raise Error("cannot take square root of number less than zero")
         self.push(Float(math.sqrt(item.value)))
 
     def op_cos(self):
         """Cosine of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.cos(item.value)))
 
     def op_sin(self):
         """Sine of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.sin(item.value)))
 
     def op_tan(self):
         """Tangent of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.tan(item.value)))
 
     def op_acos(self):
         """Arc cosine of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.acos(item.value)))
 
     def op_asin(self):
         """Arc sine of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.asin(item.value)))
 
     def op_atan(self):
         """Arc tangent of the number (radians).
-        value => value
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.atan(item.value)))
 
     def op_atan2(self):
         """Arc tangent of the next-to-top number divided by the top number (radians).
-        value1 value2 => value
+        number1 number2 => float
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
@@ -1073,22 +1088,22 @@ class Executor:
         self.push(Float(math.atan2(item1.value, item2.value)))
 
     def op_degrees(self):
-        """Convert the value in radians to degrees.
-        value => value
+        """Convert the number in radians to degrees.
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.degrees(item.value)))
 
     def op_radians(self):
-        """Convert the value in degrees to radians.
-        value => value
+        """Convert the number in degrees to radians.
+        number => float
         """
         item = self.pop(Number)
         self.push(Float(math.radians(item.value)))
 
     def op_length(self):
         """Return length of the item (String, Array).
-        item => length
+        item => integer
         """
         item = self.pop(String, Array)
         self.push(Integer(len(item)))
