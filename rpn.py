@@ -12,8 +12,7 @@ import sys
 
 from icecream import ic
 
-
-__version__ = "0.7.2"
+__version__ = "0.8.0"
 
 
 MAX_LOOP = 10_000_000
@@ -59,7 +58,7 @@ class Identifier(Item):
     def __call__(self, executor):
         executor.dereference(self)
 
-            
+
 class Key(Item):
     RX = re.compile(r"/[a-z]\w*", re.IGNORECASE)
 
@@ -272,7 +271,11 @@ class For(Loop):
         self.limit = limit.value
         self.proc = proc
         self.current = self.initial
-        if isinstance(initial, Integer) and isinstance(increment, Integer) and isinstance(limit, Integer):
+        if (
+            isinstance(initial, Integer)
+            and isinstance(increment, Integer)
+            and isinstance(limit, Integer)
+        ):
             self.value_class = Integer
         else:
             self.value_class = Float
@@ -361,7 +364,7 @@ class Stack(Interactive):
         if executor.interactive:
             for item in reversed(executor.data_stack):
                 print(f"  {item}")
-            executor.do_display = False
+            executor.do_display_stack_top = False
 
 
 class Keyspaces(Interactive):
@@ -437,7 +440,10 @@ class Lexer:
         "If non-interactive, infile is closed when its end has been reached."
         self.executor = executor
         self.infile = infile
-        self.name = infile.name
+        try:
+            self.name = infile.name
+        except AttributeError:
+            self.name = "<command-line arguments>"
         self.line = ""
         self.line_count = 0
         self.span = (0, 0)
@@ -455,7 +461,7 @@ class Lexer:
     def __next__(self):
         while self.span[1] >= len(self.line):
             if self.interactive:
-                self.executor.display()
+                self.executor.display_stack_top()
                 try:
                     line = input("rpn > ")
                 except (EOFError, KeyboardInterrupt):
@@ -480,7 +486,7 @@ class Lexer:
 
     @property
     def interactive(self):
-        "Is the input coming from an interactive session?"
+        "Is the input coming from the user?"
         return self.infile.isatty()
 
 
@@ -491,7 +497,7 @@ class Executor:
         self.exec_stack = []
         self.data_stack = []
         self.keyspaces = [{"e": Float(math.e), "pi": Float(math.pi)}]
-        self.do_display = True
+        self.do_display_stack_top = True
 
     def __call__(self, infile):
         "Parse and execute the items from the input file."
@@ -511,7 +517,7 @@ class Executor:
                     sys.stderr.write("  <empty>\n")
                 if len(self.data_stack) > 3:
                     sys.stderr.write(" ...\n")
-                self.do_display = False
+                self.do_display_stack_top = False
                 if self.interactive:
                     while len(self.exec_stack) != 1:
                         source = self.exec_stack.pop()
@@ -520,7 +526,7 @@ class Executor:
                         except AttributeError:
                             pass
                 else:
-                    sys.exit(1)
+                    break
 
     def __iter__(self):
         return self
@@ -554,27 +560,27 @@ class Executor:
                 pass
         raise KeyError(identifier)
 
-    def display(self):
-        if self.do_display:
+    def display_stack_top(self):
+        if self.do_display_stack_top:
             if self.data_stack:
                 print(f"  {self.data_stack[-1]}")
             else:
                 print("  <empty>")
         else:
-            self.do_display = True
+            self.do_display_stack_top = True
 
     def dereference(self, identifier):
         "Dereference the identifer."
         assert isinstance(identifier, Identifier)
         # Reference to a value or procedure.
-        try:  
+        try:
             item = self[identifier.value]
         # Neither variable nor procedure: must be operator.
         except KeyError:
             try:
                 method = getattr(self, f"op_{identifier.value}")
             except AttributeError:
-                raise Error("undefined identifier")
+                raise Error(f"undefined identifier '{identifier.value}'")
             else:
                 with self:
                     method()
@@ -589,7 +595,7 @@ class Executor:
 
     @property
     def interactive(self):
-        "Is this an interactive session?"
+        "Is the input coming from the user?"
         return self.exec_stack[0].interactive
 
     @property
@@ -610,7 +616,10 @@ class Executor:
         except IndexError:
             raise Error("not enough items on the stack")
         if item_classes and not isinstance(item, item_classes):
-            raise Error(error or f"Item must be {' or '.join([c.__name__.lower() for c in item_classes])}")
+            raise Error(
+                error
+                or f"Item must be {' or '.join([c.__name__.lower() for c in item_classes])}"
+            )
         return item
 
     def execute(self, iterator):
@@ -668,14 +677,14 @@ class Executor:
         except KeyError:
             pass
 
-    def op_run(self):
+    def op_exe(self):
         """Open a new input file, read items from it and execute.
         filename => -
         """
         filename = self.pop(String).value
         for item in self.exec_stack:
             if item.name == filename:
-                raise Error(f"already running 'filename'; invalid infinite loop")
+                raise Error(f"already executing 'filename'; invalid infinite loop")
         try:
             self.execute(Lexer(self, open(filename)))
         except IOError as error:
@@ -695,12 +704,6 @@ class Executor:
         with open(self.pop(String).value, "w") as outfile:
             self.dump(outfile)
 
-    def op_quit(self):
-        """Quit from execution without saving to any session file.
-        N/A
-        """
-        sys.exit(0)
-
     def op_pop(self):
         """Pop the top item from the stack, and print if interactive.
         item => -
@@ -708,7 +711,7 @@ class Executor:
         item = self.pop()
         if self.interactive:
             print(f"  {item}")
-            self.do_display = False
+            self.do_display_stack_top = False
 
     def op_dup(self):
         """Duplicate the top item. A full copy is created.
@@ -1021,8 +1024,12 @@ class Executor:
         """
         item2 = self.pop(Number)
         item1 = self.pop(Number)
-        if isinstance(item1, Integer) and isinstance(item2, Integer) and item2.value <= 0:
-            self.push(Integer(item1.value ** item2.value))
+        if (
+            isinstance(item1, Integer)
+            and isinstance(item2, Integer)
+            and item2.value <= 0
+        ):
+            self.push(Integer(item1.value**item2.value))
         else:
             self.push(Float(math.pow(item1.value, item2.value)))
 
@@ -1132,60 +1139,36 @@ def get_command_line_parser():
     "Return the command line parser."
     parser = argparse.ArgumentParser(prog="rpn.py", description=__doc__.splitlines()[0])
     parser.add_argument(
+        "-f",
+        "--filename",
+        type=pathlib.Path,
+        help="File to execute; done before expression in command-line arguments, if any.",
+    )
+    parser.add_argument(
         "-i",
         "--interactive",
-        action="store_const",
-        const=True,
+        action="store_true",
         default=False,
-        help="After executing files, leave in interactive mode.",
-    )
-
-    parser.add_argument(
-        "-s",
-        "--session",
-        help="Session file to run first at startup and dump to at exit.",
+        help="Remain in interactive mode after executing command-line expression or file.",
     )
     parser.add_argument(
-        "-S",
-        "--autosession",
-        action="store_const",
-        const=True,
-        default=False,
-        help="Use the session file defined by environment variable RPN_SESSION_FILE.",
-    )
-    parser.add_argument(
-        "filenames",
+        "expression",
         nargs="*",
-        help="Names of RPN script files to execute. If none, then interactive mode.",
+        help="Expression to evaluate. If none, then interactive mode.",
     )
     return parser
 
 
 if __name__ == "__main__":
     args = get_command_line_parser().parse_args()
-
     executor = Executor()
-
-    for filename in args.filenames:
-        filename = pathlib.Path(filename)
-        if not filename.exists():
-            sys.stderr.write(f"Error: file '{filename}' does not exist\n")
-            sys.exit(1)
-
-    session = args.session or (args.autosession and os.environ.get("RPN_SESSION_FILE"))
-    if session:
-        session = pathlib.Path(session)
-        if session.exists():
-            with open(session) as infile:
-                executor(infile)
-
-    for filename in args.filenames:
-        with open(filename) as infile:
-            executor(infile)
-
-    if not args.filenames or args.interactive:
+    if args.filename:
+        with open(args.filename) as infile:
+            executor.execute(infile)
+    if args.expression:
+        infile = io.StringIO(" ".join(args.expression))
+        executor(infile)
+    if not (args.filename or args.expression) or args.interactive:
         executor(sys.stdin)
-
-    if session:
-        with open(session, "w") as outfile:
-            executor.dump(outfile)
+    else:
+        executor.display_stack_top()

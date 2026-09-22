@@ -3,6 +3,7 @@
 import sys
 import rpn
 
+
 def print_markdown():
     print(f"# rpn v{rpn.__version__}")
 
@@ -22,17 +23,31 @@ def print_markdown():
     print("## Operators")
     print()
     all_ops = set(n[3:] for n in dir(executor) if n.startswith("op_"))
-    for title, ops in [("General", ["def", "del", "run", "count", "dump", "quit"]),
-                       ("Stack", ["pop", "dup", "exch", "clear", "print"]),
-                       ("Control", ["if", "ifelse", "loop", "repeat", "for", "exit"]),
-                       ("Logic", ["bool", "not", "and", "or", "xor", 
-                                  "gt", "ge", "lt", "le", "eq", "ne"]),
-                       ("Numbers", ["integer", "round", "float", "abs", "neg"]),
-                       ("Math", ["add", "sub", "mul", "div", "log", "log10",
-                                 "exp", "power", "sqrt"]),
-                       ("Trigonometry", ["cos", "sin", "tan", "acos", "asin", "atan",
-                                         "atan2", "degrees", "radians"]),
-                       ]:
+    for title, ops in [
+        ("General", ["def", "del", "count", "exe", "dump"]),
+        ("Stack", ["pop", "dup", "exch", "clear", "print"]),
+        ("Control", ["if", "ifelse", "loop", "repeat", "for", "exit"]),
+        (
+            "Logic",
+            ["bool", "not", "and", "or", "xor", "gt", "ge", "lt", "le", "eq", "ne"],
+        ),
+        ("Numbers", ["integer", "round", "float", "abs", "neg"]),
+        ("Math", ["add", "sub", "mul", "div", "log", "log10", "exp", "power", "sqrt"]),
+        (
+            "Trigonometry",
+            [
+                "cos",
+                "sin",
+                "tan",
+                "acos",
+                "asin",
+                "atan",
+                "atan2",
+                "degrees",
+                "radians",
+            ],
+        ),
+    ]:
         print_operators(executor, title, ops)
         all_ops.difference_update(ops)
     if all_ops:
@@ -41,7 +56,9 @@ def print_markdown():
     print()
     print("### Interactive")
     print()
-    print("The following one-character operators are available only in interactive mode.")
+    print(
+        "The following one-character operators are available only in interactive mode."
+    )
 
     print()
     print("| Operator | Description | Stack |")
@@ -62,7 +79,7 @@ def print_markdown():
     print("```")
     print(open("test.rpn").read())
     print("```")
-    
+
 
 def print_operators(executor, title, ops):
     print()
@@ -75,12 +92,12 @@ def print_operators(executor, title, ops):
         lines = [l.strip() for l in lines]
         lines = [l for l in lines if l]
         if len(lines) > 1:
-            stack = lines[-1].replace('=>', '&rarr;')
+            stack = lines[-1].replace("=>", "&rarr;")
             lines = lines[:-1]
         else:
             stack = "-"
         print(f"| **{op}** | {' '.join(lines)} | {stack} |")
-    
+
 
 if __name__ == "__main__":
     with open("README.md", "w") as outfile:

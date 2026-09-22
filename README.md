@@ -1,26 +1,25 @@
-# rpn v0.7.2
+# rpn v0.8.0
 
 Interpreting calculator using Reverse Polish Notation.
 
 ## Invocation
 
 ```
-usage: rpn.py [-h] [-i] [-s SESSION] [-S] [filenames ...]
+usage: rpn.py [-h] [-f FILENAME] [-i] [expression ...]
 
 Interpreting calculator using Reverse Polish Notation.
 
 positional arguments:
-  filenames             Names of RPN script files to execute. If none, then
-                        interactive mode.
+  expression            Expression to evaluate. If none, then interactive
+                        mode.
 
 options:
   -h, --help            show this help message and exit
-  -i, --interactive     After executing files, leave in interactive mode.
-  -s SESSION, --session SESSION
-                        Session file to run first at startup and dump to at
-                        exit.
-  -S, --autosession     Use the session file defined by environment variable
-                        RPN_SESSION_FILE.
+  -f FILENAME, --filename FILENAME
+                        File to execute; done before expression in command-
+                        line arguments, if any.
+  -i, --interactive     Remain in interactive mode after executing command-
+                        line expression or file.
 ```
 
 ## Operators
@@ -32,10 +31,9 @@ options:
 | :--- | :--- | :--- |
 | **def** | Create a variable in the current keyspace. A variable is a keyed item (value, array, procedure). | key item &rarr; - |
 | **del** | Delete a variable from the current keyspace. If no such variable, then no effect. | key &rarr; - |
-| **run** | Open a new input file, read items from it and execute. | filename &rarr; - |
 | **count** | Count the number of elements in the stack, and put that integer on the stack. | &rarr; integer |
+| **exe** | Open a new input file, read items from it and execute. | filename &rarr; - |
 | **dump** | Write out the current stack and keyspaces to the named file. | filename &rarr; - |
-| **quit** | Quit from execution without saving to any session file. | N/A |
 
 ### Stack
 
@@ -116,9 +114,9 @@ options:
 
 | Operator | Description | Stack |
 | :--- | :--- | :--- |
-| **noop** | No operation. | No change. |
-| **length** | Return length of the item (String, Array). | item &rarr; integer |
 | **error** | Raise an error. | No change. |
+| **length** | Return length of the item (String, Array). | item &rarr; integer |
+| **noop** | No operation. | No change. |
 
 ### Interactive
 
